@@ -1,0 +1,17 @@
+{
+  "late_fusion": {
+    "rank_paired_correlation": 0.8755,
+    "random_paired_correlation": 0.4683
+  },
+  "intermediate_fusion": {
+    "test_accuracy": 0.7272727272727273,
+    "qwk": 0.7523571291129498,
+    "training_samples": 385,
+    "note": "Underperformed image-only due to limited paired training data; zero recall on Stage 3/4 due to class scarcity"
+  },
+  "image_only_baseline": {
+    "test_accuracy": 0.78,
+    "auc_roc": 0.92,
+    "qwk": 0.863
+  }
+}
