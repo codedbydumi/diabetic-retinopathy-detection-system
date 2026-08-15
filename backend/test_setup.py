@@ -12,15 +12,15 @@ def categorical_focal_loss(gamma=2.0, alpha=0.25):
     return focal_loss
 
 print("Loading clinical model...")
-clinical_model = joblib.load('models/clinical_model_xgboost_FINAL.pkl')
-clinical_threshold = joblib.load('models/clinical_threshold_FINAL.pkl')
+clinical_model = joblib.load('../models/clinical_model_xgboost_FINAL.pkl')
+clinical_threshold = joblib.load('../models/clinical_threshold_FINAL.pkl')
 print(f"Clinical model loaded. Threshold: {clinical_threshold}")
 
 print("Loading image model...")
 image_model = load_model(
-    'models/mobilenetv2_final_v4_tta.keras',
+    '../models/mobilenetv2_final_v4_tta.keras',
     custom_objects={'focal_loss': categorical_focal_loss(gamma=2.0, alpha=0.25)}
 )
 print("Image model loaded.")
 
-print("\n✅ Both models load correctly on your local machine.")
+print("\n✅ Both models load correctly to my local machine.")
