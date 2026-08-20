@@ -299,15 +299,20 @@ def run_image_prediction(image_bytes: bytes, generate_heatmap: bool = True) -> d
         gradcam_path = os.path.join(IMAGES_DIR, gradcam_filename)
         cv2.imwrite(gradcam_path, cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
 
-        # base64-encode for direct inline display in the frontend without an extra request
-        _, buf = cv2.imencode('.png', cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
-        gradcam_base64 = base64.b64encode(buf).decode('utf-8')
+        # base64-encode both the overlay AND the original preprocessed image,
+        # so the UI can display them side by side (Chapter 3 qualitative
+        # Grad-CAM figures used the same original/overlay pairing).
+        _, overlay_buf = cv2.imencode('.png', cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
+        gradcam_base64 = base64.b64encode(overlay_buf).decode('utf-8')
+
+        _, original_buf = cv2.imencode('.png', cv2.cvtColor(processed, cv2.COLOR_RGB2BGR))
+        original_base64 = base64.b64encode(original_buf).decode('utf-8')
 
         result["_gradcam_path"] = gradcam_path
         result["gradcam_image_base64"] = gradcam_base64
+        result["original_image_base64"] = original_base64
 
     return result
-
 
 def strip_internal(result: dict) -> dict:
     """Remove keys prefixed with _ before sending a JSON response."""
