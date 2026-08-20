@@ -243,6 +243,63 @@ body {
   color: var(--red);
 }
 
+.field-optional-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-left: 6px;
+}
+
+/* ── optional parameters toggle + section ─────────────────────── */
+.optional-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 0 4px;
+  font-family: inherit;
+}
+
+.optional-toggle-chevron {
+  display: inline-block;
+  transition: transform 0.15s;
+  transform: rotate(90deg);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.optional-toggle-chevron.open {
+  transform: rotate(270deg);
+}
+
+.optional-toggle-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--gray);
+}
+
+.optional-section {
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--bg-light);
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius);
+}
+
+.optional-note {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+
 /* ── image dropzone ────────────────────────────────────────── */
 .dropzone {
   border: 2px dashed var(--gray-light);
