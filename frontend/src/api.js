@@ -76,11 +76,26 @@ export async function predictFusion(clinicalData, imageFile) {
   try {
     const formData = new FormData();
     formData.append('file', imageFile);
+    // Required fields are always present.
     formData.append('age', clinicalData.age);
     formData.append('glucose', clinicalData.glucose);
     formData.append('bmi', clinicalData.bmi);
     formData.append('diastolic_bp', clinicalData.diastolic_bp);
     formData.append('gender', clinicalData.gender);
+
+    // Optional fields — only append the ones the clinician actually
+    // filled in (buildClinicalPayload in ScreeningForm already strips
+    // empty ones from clinicalData, so anything present here is real).
+    const optionalKeys = [
+      'systolic_bp', 'pulse_rate', 'pregnancies', 'skin_thickness',
+      'insulin', 'pedigree_function', 'family_diabetes', 'hypertensive',
+      'cardiovascular_disease',
+    ];
+    for (const key of optionalKeys) {
+      if (clinicalData[key] !== undefined && clinicalData[key] !== null && clinicalData[key] !== '') {
+        formData.append(key, clinicalData[key]);
+      }
+    }
 
     const response = await client.post('/predict/fusion', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
