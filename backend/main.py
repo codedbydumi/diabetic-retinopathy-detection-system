@@ -299,20 +299,15 @@ def run_image_prediction(image_bytes: bytes, generate_heatmap: bool = True) -> d
         gradcam_path = os.path.join(IMAGES_DIR, gradcam_filename)
         cv2.imwrite(gradcam_path, cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
 
-        # base64-encode both the overlay AND the original preprocessed image,
-        # so the UI can display them side by side (Chapter 3 qualitative
-        # Grad-CAM figures used the same original/overlay pairing).
-        _, overlay_buf = cv2.imencode('.png', cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
-        gradcam_base64 = base64.b64encode(overlay_buf).decode('utf-8')
-
-        _, original_buf = cv2.imencode('.png', cv2.cvtColor(processed, cv2.COLOR_RGB2BGR))
-        original_base64 = base64.b64encode(original_buf).decode('utf-8')
+        # base64-encode for direct inline display in the frontend without an extra request
+        _, buf = cv2.imencode('.png', cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
+        gradcam_base64 = base64.b64encode(buf).decode('utf-8')
 
         result["_gradcam_path"] = gradcam_path
         result["gradcam_image_base64"] = gradcam_base64
-        result["original_image_base64"] = original_base64
 
     return result
+
 
 def strip_internal(result: dict) -> dict:
     """Remove keys prefixed with _ before sending a JSON response."""
@@ -453,10 +448,45 @@ def build_pdf_report(patient_data: dict, gradcam_path: str = None, shap_fig_path
 
     if has_clinical:
         elements.append(Paragraph("CLINICAL PARAMETERS", section_style))
-        param_rows = [
-            ('Age', f"{patient_data['age']} yrs", 'Diastolic BP', f"{patient_data['diastolic_bp']} mmHg"),
-            ('Glucose', f"{patient_data['glucose']} mg/dL", 'BMI', f"{patient_data['bmi']} kg/m\u00b2"),
+
+        # Always-present required fields first, then any optional fields
+        # that were actually provided (patient_data only contains keys
+        # that were filled in — see get_report()).
+        field_display = [
+            ('age', 'Age', 'yrs'), ('glucose', 'Glucose', 'mg/dL'),
+            ('bmi', 'BMI', 'kg/m\u00b2'), ('diastolic_bp', 'Diastolic BP', 'mmHg'),
+            ('systolic_bp', 'Systolic BP', 'mmHg'), ('pulse_rate', 'Pulse rate', 'bpm'),
+            ('pregnancies', 'Pregnancies', ''), ('skin_thickness', 'Skin thickness', 'mm'),
+            ('insulin', 'Insulin level', '\u00b5U/mL'), ('pedigree_function', 'Family history score', ''),
         ]
+        flag_display = [
+            ('family_diabetes', 'Family diabetes history'),
+            ('hypertensive', 'Hypertension'),
+            ('cardiovascular_disease', 'Cardiovascular disease'),
+        ]
+
+        present_fields = [(key, label, unit) for key, label, unit in field_display if key in patient_data]
+        present_flags = [(key, label) for key, label in flag_display if key in patient_data]
+
+        param_rows = []
+        for i in range(0, len(present_fields), 2):
+            left = present_fields[i]
+            right = present_fields[i + 1] if i + 1 < len(present_fields) else None
+            row = (
+                left[1], f"{patient_data[left[0]]} {left[2]}".strip(),
+                right[1] if right else '', f"{patient_data[right[0]]} {right[2]}".strip() if right else ''
+            )
+            param_rows.append(row)
+        for i in range(0, len(present_flags), 2):
+            left = present_flags[i]
+            right = present_flags[i + 1] if i + 1 < len(present_flags) else None
+            left_val = 'Yes' if patient_data[left[0]] else 'No'
+            row = (
+                left[1], left_val,
+                right[1] if right else '', ('Yes' if patient_data[right[0]] else 'No') if right else ''
+            )
+            param_rows.append(row)
+
         clin_data = [[Paragraph(f"<font size=7 color='#64748B'><b>{a}</b></font>", body_style), Paragraph(f"<font size=10>{b}</font>", body_style),
                       Paragraph(f"<font size=7 color='#64748B'><b>{c}</b></font>", body_style), Paragraph(f"<font size=10>{d}</font>", body_style)]
                      for a, b, c, d in param_rows]
@@ -605,12 +635,27 @@ async def predict_fusion_endpoint(
     glucose: float = Form(..., ge=40, le=600),
     bmi: float = Form(..., ge=10, le=70),
     diastolic_bp: float = Form(..., ge=30, le=160),
-    gender: str = Form("Female")
+    gender: str = Form("Female"),
+    pregnancies: Optional[float] = Form(None, ge=0, le=20),
+    skin_thickness: Optional[float] = Form(None, ge=0, le=100),
+    insulin: Optional[float] = Form(None, ge=0, le=900),
+    pedigree_function: Optional[float] = Form(None, ge=0, le=3),
+    systolic_bp: Optional[float] = Form(None, ge=50, le=250),
+    pulse_rate: Optional[float] = Form(None, ge=30, le=220),
+    family_diabetes: Optional[float] = Form(None, ge=0, le=1),
+    hypertensive: Optional[float] = Form(None, ge=0, le=1),
+    cardiovascular_disease: Optional[float] = Form(None, ge=0, le=1),
 ):
     if gender not in ("Male", "Female"):
         raise HTTPException(status_code=400, detail="Gender must be 'Male' or 'Female'.")
 
-    clinical_dict = {"age": age, "glucose": glucose, "bmi": bmi, "diastolic_bp": diastolic_bp, "gender": gender}
+    clinical_dict = {
+        "age": age, "glucose": glucose, "bmi": bmi, "diastolic_bp": diastolic_bp, "gender": gender,
+        "pregnancies": pregnancies, "skin_thickness": skin_thickness, "insulin": insulin,
+        "pedigree_function": pedigree_function, "systolic_bp": systolic_bp, "pulse_rate": pulse_rate,
+        "family_diabetes": family_diabetes, "hypertensive": hypertensive,
+        "cardiovascular_disease": cardiovascular_disease,
+    }
     clinical_result = run_clinical_prediction(clinical_dict)
 
     image_bytes = await validate_image_upload(file)
@@ -663,6 +708,15 @@ def get_report(report_id: str):
             "diastolic_bp": clinical_data["diastolic_bp"],
             "clinical_risk_score": cached.get("fused_risk_score", clinical_result["risk_score"]),
         })
+        # Include any optional fields the clinician actually provided
+        # (None values are omitted so the PDF only shows real data).
+        optional_keys = ['systolic_bp', 'pulse_rate', 'pregnancies', 'skin_thickness',
+                          'insulin', 'pedigree_function', 'family_diabetes',
+                          'hypertensive', 'cardiovascular_disease']
+        for key in optional_keys:
+            val = clinical_data.get(key)
+            if val is not None:
+                patient_data[key] = val
         shap_fig_path = os.path.join(IMAGES_DIR, f"shap_{report_id}.png")
         generate_shap_waterfall_image(
             clinical_result["_shap_explanation"],
