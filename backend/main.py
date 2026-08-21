@@ -299,12 +299,24 @@ def run_image_prediction(image_bytes: bytes, generate_heatmap: bool = True) -> d
         gradcam_path = os.path.join(IMAGES_DIR, gradcam_filename)
         cv2.imwrite(gradcam_path, cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
 
-        # base64-encode for direct inline display in the frontend without an extra request
-        _, buf = cv2.imencode('.png', cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
-        gradcam_base64 = base64.b64encode(buf).decode('utf-8')
+        # Also save the original preprocessed image to disk (not just the
+        # overlay) so the PDF report can show both side by side, matching
+        # the UI's GradCamViewer component.
+        original_filename = f"original_{uuid.uuid4().hex[:10]}.png"
+        original_path = os.path.join(IMAGES_DIR, original_filename)
+        cv2.imwrite(original_path, cv2.cvtColor(processed, cv2.COLOR_RGB2BGR))
+
+        # base64-encode both images for direct inline display in the frontend
+        _, overlay_buf = cv2.imencode('.png', cv2.cvtColor(overlayed, cv2.COLOR_RGB2BGR))
+        gradcam_base64 = base64.b64encode(overlay_buf).decode('utf-8')
+
+        _, original_buf = cv2.imencode('.png', cv2.cvtColor(processed, cv2.COLOR_RGB2BGR))
+        original_base64 = base64.b64encode(original_buf).decode('utf-8')
 
         result["_gradcam_path"] = gradcam_path
+        result["_original_path"] = original_path
         result["gradcam_image_base64"] = gradcam_base64
+        result["original_image_base64"] = original_base64
 
     return result
 
@@ -392,7 +404,7 @@ def build_doc(output_path, report_id, gen_time):
     return doc
 
 
-def build_pdf_report(patient_data: dict, gradcam_path: str = None, shap_fig_path: str = None, output_path: str = None):
+def build_pdf_report(patient_data: dict, gradcam_path: str = None, original_path: str = None, shap_fig_path: str = None, output_path: str = None):
     has_clinical = shap_fig_path is not None
     has_image = gradcam_path is not None
     mode = "Mode 3 \u2014 Fusion" if (has_clinical and has_image) else "Mode 1 \u2014 Clinical Only" if has_clinical else "Mode 2 \u2014 Image Only"
@@ -504,9 +516,28 @@ def build_pdf_report(patient_data: dict, gradcam_path: str = None, shap_fig_path
 
     if has_image:
         elements.append(Paragraph("RETINAL IMAGE ANALYSIS \u2014 GRAD-CAM", section_style))
-        img_card = Table([[RLImage(gradcam_path, width=60 * mm, height=60 * mm)]], colWidths=[174 * mm])
-        img_card.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('BOX', (0, 0), (-1, -1), 0.5, GRAY_LIGHT), ('TOPPADDING', (0, 0), (-1, -1), 8), ('BOTTOMPADDING', (0, 0), (-1, -1), 8)]))
-        elements.append(img_card)
+        if original_path:
+            img_card = Table(
+                [[RLImage(original_path, width=55 * mm, height=55 * mm),
+                  RLImage(gradcam_path, width=55 * mm, height=55 * mm)]],
+                colWidths=[87 * mm, 87 * mm]
+            )
+            img_card.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('BOX', (0, 0), (-1, -1), 0.5, GRAY_LIGHT),
+                ('TOPPADDING', (0, 0), (-1, -1), 8), ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(img_card)
+            elements.append(Spacer(1, 4))
+            caption_row = Table(
+                [[Paragraph("Original image", caption_style), Paragraph("Grad-CAM heatmap", caption_style)]],
+                colWidths=[87 * mm, 87 * mm]
+            )
+            caption_row.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER')]))
+            elements.append(caption_row)
+        else:
+            img_card = Table([[RLImage(gradcam_path, width=60 * mm, height=60 * mm)]], colWidths=[174 * mm])
+            img_card.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('BOX', (0, 0), (-1, -1), 0.5, GRAY_LIGHT), ('TOPPADDING', (0, 0), (-1, -1), 8), ('BOTTOMPADDING', (0, 0), (-1, -1), 8)]))
+            elements.append(img_card)
         elements.append(Spacer(1, 6))
         elements.append(Paragraph(f"Heatmap highlights regions the model identified as most influential in classifying this retina as "
                                     f"<b>{patient_data['predicted_stage_label']}</b> (Stage {patient_data['predicted_dr_stage']}), "
@@ -699,6 +730,7 @@ def get_report(report_id: str):
     patient_data = {}
     shap_fig_path = None
     gradcam_path = None
+    original_path = None
 
     if clinical_result is not None:
         patient_data.update({
@@ -732,8 +764,9 @@ def get_report(report_id: str):
             "image_confidence": image_result["confidence"],
         })
         gradcam_path = image_result["_gradcam_path"]
+        original_path = image_result.get("_original_path")
 
     pdf_path = os.path.join(REPORTS_DIR, f"report_{report_id}.pdf")
-    build_pdf_report(patient_data, gradcam_path=gradcam_path, shap_fig_path=shap_fig_path, output_path=pdf_path)
+    build_pdf_report(patient_data, gradcam_path=gradcam_path, original_path=original_path, shap_fig_path=shap_fig_path, output_path=pdf_path)
 
     return FileResponse(pdf_path, media_type="application/pdf", filename=f"DR_Report_{report_id}.pdf")
