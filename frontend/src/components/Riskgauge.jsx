@@ -5,8 +5,6 @@ function RiskGauge({ score, level }) {
   const cy = 100;
   const r = 80;
 
-  // Needle angle: 0% -> 180deg (left), 100% -> 0deg (right) — same
-  // orientation as the ReportLab gauge in main.py (build_pdf_report).
   const angleDeg = 180 - (clamped / 100) * 180;
   const angleRad = (angleDeg * Math.PI) / 180;
   const needleLen = r - 14;
@@ -20,7 +18,6 @@ function RiskGauge({ score, level }) {
   const border =
     clamped < 30 ? '#a7f3d0' : clamped < 60 ? '#fde68a' : '#fecaca';
 
-  // Three background zones drawn as arcs.
   function arcPath(startPct, endPct) {
     const a1 = 180 - (startPct / 100) * 180;
     const a2 = 180 - (endPct / 100) * 180;
@@ -46,48 +43,49 @@ function RiskGauge({ score, level }) {
       }}
     >
       <svg viewBox="0 0 200 120" width="160" height="96" aria-hidden="true">
-        <path
-          d={arcPath(0, 30)}
-          stroke="#a7f3d0"
-          strokeWidth="16"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <path
-          d={arcPath(30, 60)}
-          stroke="#fde68a"
-          strokeWidth="16"
-          fill="none"
-        />
-        <path
-          d={arcPath(60, 100)}
-          stroke="#fecaca"
-          strokeWidth="16"
-          fill="none"
-          strokeLinecap="round"
-        />
-        <line
-          x1={cx}
-          y1={cy}
-          x2={nx}
-          y2={ny}
-          stroke="var(--navy)"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
+        <path d={arcPath(0, 30)} stroke="#a7f3d0" strokeWidth="16" fill="none" strokeLinecap="round" />
+        <path d={arcPath(30, 60)} stroke="#fde68a" strokeWidth="16" fill="none" />
+        <path d={arcPath(60, 100)} stroke="#fecaca" strokeWidth="16" fill="none" strokeLinecap="round" />
+        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="var(--navy)" strokeWidth="3" strokeLinecap="round" />
         <circle cx={cx} cy={cy} r="6" fill="var(--navy)" />
+        {/* Small tick marks at 0 / 30 / 60 / 100 — reinforces the
+            instrument-dial reading, matching the readout signature
+            used throughout the rest of the interface. */}
+        {[0, 30, 60, 100].map((pct) => {
+          const a = (180 - (pct / 100) * 180) * (Math.PI / 180);
+          const x1t = cx + (r + 4) * Math.cos(a);
+          const y1t = cy - (r + 4) * Math.sin(a);
+          const x2t = cx + (r + 10) * Math.cos(a);
+          const y2t = cy - (r + 10) * Math.sin(a);
+          return (
+            <line
+              key={pct}
+              x1={x1t}
+              y1={y1t}
+              x2={x2t}
+              y2={y2t}
+              stroke="var(--gray)"
+              strokeWidth="1"
+              opacity="0.5"
+            />
+          );
+        })}
       </svg>
 
       <div>
-        <div style={{ fontSize: 30, fontWeight: 700, color, lineHeight: 1 }}>
+        <div
+          className="readout"
+          style={{ fontSize: 30, fontWeight: 600, color, lineHeight: 1 }}
+        >
           {clamped}%
         </div>
         <div
           style={{
-            fontSize: 12,
-            fontWeight: 700,
+            fontSize: 11.5,
+            fontWeight: 600,
+            fontFamily: 'var(--font-sans)',
             color: 'var(--gray)',
-            letterSpacing: '0.04em',
+            letterSpacing: '0.05em',
             marginTop: 6,
           }}
         >
