@@ -1,5 +1,30 @@
 import ClinicianScanIllustration from './ClinicianScanIllustration';
 
+const MODES = [
+  {
+    label: 'Mode 1 — Clinical only',
+    desc: '13 clinical parameters in, a risk score and SHAP explanation out',
+  },
+  {
+    label: 'Mode 2 — Image only',
+    desc: 'A retinal photo in, a DR severity stage and Grad-CAM heatmap out',
+  },
+  {
+    label: 'Mode 3 — Fusion',
+    desc: 'Both inputs combined for the highest-confidence result',
+  },
+];
+
+const REPORT_CONTENTS = [
+  'Patient ID, screening date, and the mode used',
+  'An overall risk gauge, colour-coded low / moderate / high',
+  'Clinical parameters table, when clinical data is provided',
+  'Retinal image analysis — original photo and Grad-CAM heatmap side by side, when an image is provided',
+  'SHAP explanation chart showing what drove the risk score, when clinical data is provided',
+  'Clinical recommendations based on the result',
+  'The same clinician-review disclaimer shown throughout this system',
+];
+
 const RECOMMENDATIONS = [
   'Keep blood glucose (HbA1c) well controlled — the single strongest protective factor',
   'Get a comprehensive dilated eye exam at least once a year, or as often as your doctor recommends',
@@ -47,6 +72,7 @@ function AboutPanel({ onClose }) {
         explained rather than left as a black box.
       </p>
 
+      {/* ── Models & performance ──────────────────────────────── */}
       <p className="section-title" style={{ marginTop: 20 }}>
         Models &amp; performance
       </p>
@@ -88,6 +114,29 @@ function AboutPanel({ onClose }) {
         &mdash; and results are only ever intended to support, not
         replace, clinical judgement.
       </p>
+
+      {/* ── How screening works ───────────────────────────────── */}
+      <p className="section-title" style={{ marginTop: 22 }}>
+        How screening works
+      </p>
+      <div className="about-modes">
+        {MODES.map((m) => (
+          <div className="about-mode" key={m.label}>
+            <span className="about-mode-label">{m.label}</span>
+            <span className="about-mode-desc">{m.desc}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── What's in your PDF report ─────────────────────────── */}
+      <p className="section-title" style={{ marginTop: 20 }}>
+        What&rsquo;s in your PDF report
+      </p>
+      <ul className="about-recommendations-list">
+        {REPORT_CONTENTS.map((r) => (
+          <li key={r}>{r}</li>
+        ))}
+      </ul>
 
       <ClinicianScanIllustration variant="about" />
 
