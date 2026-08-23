@@ -1,3 +1,5 @@
+import ClinicianScanIllustration from './ClinicianScanIllustration';
+
 function AboutPanel({ onClose }) {
   return (
     <div className="about-panel">
@@ -17,49 +19,55 @@ function AboutPanel({ onClose }) {
 
       <p className="about-text">
         This is a multi-modal AI screening system for diabetic
-        retinopathy (DR) — a leading cause of preventable blindness in
-        adults with diabetes. It combines a clinical risk model with a
-        retinal image classifier, so screening can happen with either
-        input alone or both together, depending on what a clinic has
-        available.
+        retinopathy (DR) &mdash; a leading cause of preventable
+        blindness in adults with diabetes. It combines a clinical risk
+        model with a retinal image classifier, with every prediction
+        explained rather than left as a black box.
       </p>
 
-      <div className="about-modes">
-        <div className="about-mode">
-          <span className="about-mode-label">Mode 1</span>
-          <span className="about-mode-desc">
-            Clinical parameters only — no retinal image needed
-          </span>
+      <p className="section-title" style={{ marginTop: 20 }}>
+        Models &amp; performance
+      </p>
+      <div className="about-models">
+        <div className="about-model-card">
+          <span className="about-model-name">Clinical risk model</span>
+          <span className="about-model-detail">XGBoost, trained on verified clinical datasets</span>
+          <div className="about-model-stats">
+            <div className="about-stat">
+              <span className="about-stat-value readout">87.1%</span>
+              <span className="about-stat-label">Accuracy</span>
+            </div>
+            <div className="about-stat">
+              <span className="about-stat-value readout">0.896</span>
+              <span className="about-stat-label">AUC-ROC</span>
+            </div>
+          </div>
         </div>
-        <div className="about-mode">
-          <span className="about-mode-label">Mode 2</span>
-          <span className="about-mode-desc">
-            Retinal image only — no clinical data needed
-          </span>
-        </div>
-        <div className="about-mode">
-          <span className="about-mode-label">Mode 3</span>
-          <span className="about-mode-desc">
-            Both combined — highest-confidence result
-          </span>
+
+        <div className="about-model-card">
+          <span className="about-model-name">Retinal image model</span>
+          <span className="about-model-detail">MobileNetV2, fine-tuned across 5 DR severity stages</span>
+          <div className="about-model-stats">
+            <div className="about-stat">
+              <span className="about-stat-value readout">78.0%</span>
+              <span className="about-stat-label">Accuracy</span>
+            </div>
+            <div className="about-stat">
+              <span className="about-stat-value readout">0.920</span>
+              <span className="about-stat-label">AUC-ROC</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <p className="about-text">
-        The clinical model is a gradient-boosted classifier (XGBoost)
-        trained on verified clinical datasets, explained per patient
-        with SHAP. The image model is a MobileNetV2 convolutional
-        network fine-tuned to grade DR severity across five stages
-        (No DR to Proliferative DR), explained with Grad-CAM heatmaps
-        showing which regions of the retina influenced the result.
+      <p className="about-text about-text-muted" style={{ marginTop: 14 }}>
+        Both models are explained per prediction &mdash; SHAP for
+        clinical risk factors, Grad-CAM for retinal image regions
+        &mdash; and results are only ever intended to support, not
+        replace, clinical judgement.
       </p>
 
-      <p className="about-text about-text-muted">
-        This is a decision-support tool developed as part of an
-        academic research project. It is not a diagnostic device, and
-        every prediction is intended for review by a qualified
-        clinician.
-      </p>
+      <ClinicianScanIllustration />
     </div>
   );
 }
