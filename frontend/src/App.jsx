@@ -105,21 +105,28 @@ function App() {
       <DisclaimerBanner />
 
       <main className="app-main">
-        {isAboutOpen && <AboutPanel onClose={() => setIsAboutOpen(false)} />}
+        {isAboutOpen ? (
+          // About is a standalone view — it fully replaces the
+          // screening form / results while open, rather than
+          // appearing stacked above them.
+          <div className="view-transition">
+            <AboutPanel onClose={() => setIsAboutOpen(false)} />
+          </div>
+        ) : (
+          <div key={result ? 'results' : 'form'} className="view-transition">
+            {!result && (
+              <ScreeningForm
+                mode={mode}
+                onModeChange={handleModeChange}
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+                error={error}
+              />
+            )}
 
-        <div key={result ? 'results' : 'form'} className="view-transition">
-          {!result && (
-            <ScreeningForm
-              mode={mode}
-              onModeChange={handleModeChange}
-              onSubmit={handleSubmit}
-              isLoading={isLoading}
-              error={error}
-            />
-          )}
-
-          {result && <ResultsPanel result={result} onReset={handleReset} />}
-        </div>
+            {result && <ResultsPanel result={result} onReset={handleReset} />}
+          </div>
+        )}
       </main>
 
       <footer className="app-footer">
