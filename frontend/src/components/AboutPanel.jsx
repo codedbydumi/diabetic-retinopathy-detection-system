@@ -1,5 +1,27 @@
 import ClinicianScanIllustration from './ClinicianScanIllustration';
 
+const RECOMMENDATIONS = [
+  'Keep blood glucose (HbA1c) well controlled — the single strongest protective factor',
+  'Get a comprehensive dilated eye exam at least once a year, or as often as your doctor recommends',
+  'Manage blood pressure and cholesterol alongside blood sugar',
+  'Stay physically active and maintain a balanced diet',
+  'Avoid smoking',
+  'Report any vision changes promptly, even if mild — early stages often have no symptoms',
+];
+
+const LEARN_MORE_LINKS = [
+  {
+    name: 'National Eye Institute (NIH)',
+    desc: 'What diabetic retinopathy is, symptoms, and treatment',
+    url: 'https://www.nei.nih.gov/eye-health-information/eye-conditions-and-diseases/diabetic-retinopathy',
+  },
+  {
+    name: 'MedlinePlus (NIH)',
+    desc: 'Patient-facing guide to diabetic eye disease',
+    url: 'https://medlineplus.gov/diabeticeyeproblems.html',
+  },
+];
+
 function AboutPanel({ onClose }) {
   return (
     <div className="about-panel">
@@ -68,6 +90,67 @@ function AboutPanel({ onClose }) {
       </p>
 
       <ClinicianScanIllustration variant="about" />
+
+      {/* ── Diabetes & DR facts ───────────────────────────────── */}
+      <p className="section-title" style={{ marginTop: 24 }}>
+        Diabetes &amp; retinopathy &mdash; the numbers
+      </p>
+      <ul className="about-facts-list">
+        <li>
+          An estimated <span className="readout">537 million</span>{' '}
+          adults live with diabetes worldwide, projected to reach{' '}
+          <span className="readout">783 million</span> by 2045
+        </li>
+        <li>
+          Roughly <span className="readout">1 in 3</span> people with
+          diabetes develops some degree of diabetic retinopathy over
+          their lifetime
+        </li>
+        <li>
+          Risk rises with how long someone has had diabetes, not age
+          alone &mdash; lifetime risk is estimated at{' '}
+          <span className="readout">50&ndash;60%</span> for type 2
+          diabetes and over <span className="readout">90%</span> for
+          type 1 diabetes
+        </li>
+        <li>
+          Early detection and timely treatment can lower the risk of
+          blindness by up to <span className="readout">95%</span>
+        </li>
+      </ul>
+
+      {/* ── What you can do ───────────────────────────────────── */}
+      <p className="section-title" style={{ marginTop: 20 }}>
+        If you have diabetes, what you can do
+      </p>
+      <ul className="about-recommendations-list">
+        {RECOMMENDATIONS.map((r) => (
+          <li key={r}>{r}</li>
+        ))}
+      </ul>
+
+      {/* ── Learn more ─────────────────────────────────────────── */}
+      <p className="section-title" style={{ marginTop: 20 }}>
+        Learn more
+      </p>
+      <div className="about-links-list">
+        {LEARN_MORE_LINKS.map((link) => (
+          <a
+            key={link.url}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="about-link-item"
+          >
+            <span className="about-link-name">{link.name}</span>
+            <span className="about-link-desc">{link.desc}</span>
+          </a>
+        ))}
+      </div>
+      <p className="about-text-muted" style={{ fontSize: 11.5, marginTop: 10 }}>
+        These are independent, authoritative medical resources &mdash;
+        not part of this system &mdash; provided for further reading.
+      </p>
 
       <div className="about-panel-footer">
         <button type="button" className="btn btn-secondary" onClick={onClose}>
