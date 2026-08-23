@@ -2,13 +2,20 @@
 // showing a monitor with a pulsing/scanning retinal reticle beside a
 // simple clinician pictogram. Reinforces the human-in-the-loop message
 // (AI scans, clinician reviews) rather than existing as pure decoration.
-function ClinicianScanIllustration({ caption = true }) {
+//
+// variant="welcome" — the simpler version shown in the welcome gate.
+// variant="about"   — adds small floating "data point" markers to feel
+//                      more active/analytical, appropriate to a page
+//                      the user reads more deliberately.
+function ClinicianScanIllustration({ caption = true, variant = 'welcome' }) {
+  const isAbout = variant === 'about';
+
   return (
-    <div className="scan-illustration-wrap">
+    <div className={`scan-illustration-wrap${isAbout ? ' scan-illustration-about' : ''}`}>
       <svg
         viewBox="0 0 320 170"
         width="100%"
-        style={{ maxWidth: 320, display: 'block', margin: '0 auto' }}
+        style={{ maxWidth: isAbout ? 340 : 320, display: 'block', margin: '0 auto' }}
         role="img"
         aria-label="Illustration of a clinician reviewing an AI-generated retinal scan"
       >
@@ -30,10 +37,10 @@ function ClinicianScanIllustration({ caption = true }) {
         <line x1="181" y1="61" x2="189" y2="61" stroke="var(--navy)" strokeWidth="1.4" strokeLinecap="round" />
 
         {/* sweeping scan line, clipped to the monitor interior */}
-        <clipPath id="scanClip">
+        <clipPath id={`scanClip-${variant}`}>
           <rect x="90" y="14" width="142" height="94" rx="9" />
         </clipPath>
-        <g clipPath="url(#scanClip)">
+        <g clipPath={`url(#scanClip-${variant})`}>
           <line
             className="scan-sweep-line"
             x1="90"
@@ -51,6 +58,16 @@ function ClinicianScanIllustration({ caption = true }) {
         <rect x="50" y="128" width="15" height="19" rx="2" fill="none" stroke="var(--gray)" strokeWidth="1.2" />
         <line x1="53" y1="133" x2="62" y2="133" stroke="var(--gray)" strokeWidth="1" />
         <line x1="53" y1="138" x2="62" y2="138" stroke="var(--gray)" strokeWidth="1" />
+
+        {/* about-page only: floating data-point markers, suggesting
+            active analysis rather than a static illustration */}
+        {isAbout && (
+          <>
+            <circle className="scan-data-dot scan-data-dot-1" cx="252" cy="30" r="3" fill="var(--teal)" />
+            <circle className="scan-data-dot scan-data-dot-2" cx="264" cy="70" r="2.5" fill="var(--navy)" opacity="0.5" />
+            <circle className="scan-data-dot scan-data-dot-3" cx="246" cy="95" r="2" fill="var(--teal)" opacity="0.7" />
+          </>
+        )}
       </svg>
       {caption && (
         <p className="scan-illustration-caption">
