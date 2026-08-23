@@ -1,24 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
 :root {
-  --navy: #0a2342;
-  --navy-light: #1a3a5c;
-  --teal: #0d9488;
-  --teal-light: #ccfbf1;
-  --teal-bg: #e1f5ee;
-  --ink: #1e293b;
-  --gray: #64748b;
-  --gray-light: #e2e8f0;
-  --bg-light: #f8fafc;
+  --navy: #0B1E3D;
+  --navy-light: #1C3660;
+  --teal: #0D9488;
+  --teal-light: #CCFBF1;
+  --teal-bg: #E1F5EE;
+  --ink: #16232E;
+  --gray: #5B6B7A;
+  --gray-light: #DDE3E8;
+  --bg-light: #F7F8FA;
   --green: #059669;
-  --green-bg: #ecfdf5;
-  --amber: #d97706;
-  --amber-bg: #fffbeb;
-  --red: #dc2626;
-  --red-bg: #fef2f2;
-  --white: #ffffff;
+  --green-bg: #ECFDF5;
+  --amber: #D97706;
+  --amber-bg: #FFFBEB;
+  --red: #DC2626;
+  --red-bg: #FEF2F2;
+  --white: #FFFFFF;
   --radius: 10px;
   --radius-lg: 14px;
-  --shadow: 0 1px 3px rgba(10, 35, 66, 0.08), 0 1px 2px rgba(10, 35, 66, 0.06);
-  --shadow-md: 0 4px 12px rgba(10, 35, 66, 0.1);
+  --shadow: 0 1px 3px rgba(11, 30, 61, 0.08), 0 1px 2px rgba(11, 30, 61, 0.06);
+  --shadow-md: 0 4px 12px rgba(11, 30, 61, 0.1);
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
 }
 
 * {
@@ -27,8 +31,7 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg-light);
   color: var(--ink);
 }
@@ -37,6 +40,33 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* ── instrument-readout signature treatment ──────────────────
+   Applied to every clinical number in the system — risk scores,
+   confidence values, clinical parameter values. Monospace with
+   tabular numerals and a thin bordered chip, evoking a diagnostic
+   instrument's digital display rather than ordinary UI text. */
+.readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+}
+
+.readout-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  background: var(--bg-light);
+  border: 1px solid var(--gray-light);
+  border-radius: 6px;
+  padding: 2px 8px;
+  color: var(--navy);
+  font-weight: 500;
 }
 
 /* ── header ────────────────────────────────────────────────── */
@@ -64,7 +94,8 @@ body {
   border-radius: var(--radius);
   background: var(--teal);
   color: var(--navy);
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-weight: 600;
   font-size: 15px;
   display: flex;
   align-items: center;
@@ -75,7 +106,8 @@ body {
 .app-brand h1 {
   margin: 0;
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 600;
+  font-family: var(--font-sans);
   color: var(--white);
   line-height: 1.3;
 }
@@ -145,11 +177,12 @@ body {
 }
 
 .section-title {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-sans);
   color: var(--navy);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   margin: 0 0 14px;
 }
 
@@ -182,7 +215,7 @@ body {
 
 .mode-tab-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--navy);
   margin-bottom: 3px;
 }
@@ -214,6 +247,7 @@ body {
 
 .field-hint {
   font-size: 11px;
+  font-family: var(--font-mono);
   color: var(--gray);
 }
 
@@ -224,8 +258,13 @@ body {
   padding: 9px 11px;
   font-size: 14px;
   color: var(--ink);
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: border-color 0.15s;
+}
+
+.field input[type="number"] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .field input:focus,
@@ -246,6 +285,7 @@ body {
 .field-optional-tag {
   font-size: 10px;
   font-weight: 600;
+  font-family: var(--font-sans);
   color: var(--gray);
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -264,7 +304,7 @@ body {
   font-weight: 600;
   cursor: pointer;
   padding: 12px 0 4px;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .optional-toggle-chevron {
@@ -354,7 +394,7 @@ body {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: rgba(10, 35, 66, 0.75);
+  background: rgba(11, 30, 61, 0.75);
   color: var(--white);
   border: none;
   border-radius: 50%;
@@ -377,10 +417,10 @@ body {
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
+  font-family: var(--font-sans);
   padding: 12px 20px;
   cursor: pointer;
   transition: background 0.15s, opacity 0.15s;
-  font-family: inherit;
 }
 
 .btn-primary {
@@ -437,6 +477,7 @@ body {
   margin: 0;
   padding-left: 18px;
   font-size: 12.5px;
+  font-family: var(--font-mono);
   color: #991b1b;
 }
 
