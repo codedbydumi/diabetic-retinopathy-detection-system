@@ -11,9 +11,6 @@ function ResultsPanel({ result, onReset }) {
   const hasClinical = !!result.clinical;
   const hasImage = !!result.image;
 
-  // Prefer the fused score for Mode 3; fall back to the single-modality
-  // score otherwise. Mirrors the same precedence used server-side in
-  // GET /report/{report_id} (main.py).
   const riskScore = result.fused_risk_score ?? result.clinical?.risk_score ?? null;
 
   const riskLevel =
@@ -38,99 +35,107 @@ function ResultsPanel({ result, onReset }) {
   }
 
   return (
-    <div>
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
+    <div className="results-layout">
+      {/* ── Summary rail — pinned readout, always visible ── */}
+      <div className="results-summary">
+        <div className="card">
+          <div className="results-summary-header">
             <p className="section-title" style={{ marginBottom: 4 }}>
               {result.mode}
             </p>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--gray)' }}>
-              Screening result
-            </p>
+            <p className="results-summary-sub">Screening result</p>
           </div>
-          <button type="button" className="btn btn-secondary" onClick={onReset}>
+
+          {riskScore !== null && (
+            <div style={{ marginTop: 16 }}>
+              <RiskGauge score={riskScore} level={riskLevel} />
+            </div>
+          )}
+
+          {hasImage && (
+            <div className="results-readout-block">
+              <span className="results-readout-label">Predicted stage</span>
+              <span className="readout results-readout-value">
+                {result.image.stage_label}
+              </span>
+              <span className="results-readout-detail">
+                Stage {result.image.predicted_stage} &middot;{' '}
+                <span className="readout">{result.image.confidence}%</span> confidence
+              </span>
+            </div>
+          )}
+
+          {hasClinical && (
+            <div className="results-readout-block">
+              <span className="results-readout-label">Clinical risk</span>
+              <span className="readout results-readout-value">
+                {result.clinical.risk_prediction}
+              </span>
+              <span className="results-readout-detail">
+                <span className="readout">{result.clinical.risk_score}%</span> risk score
+              </span>
+            </div>
+          )}
+
+          <div style={{ marginTop: 18 }}>
+            <button
+              type="button"
+              className="btn btn-download"
+              style={{ width: '100%' }}
+              onClick={handleDownload}
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <>
+                  <span className="spinner" aria-hidden="true" />
+                  Preparing report&hellip;
+                </>
+              ) : (
+                'Download PDF report'
+              )}
+            </button>
+            {downloadError && (
+              <p className="field-error" style={{ marginTop: 8 }}>
+                {downloadError}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ width: '100%', marginTop: 8 }}
+            onClick={onReset}
+          >
             New screening
           </button>
         </div>
-
-        {riskScore !== null && (
-          <div style={{ marginTop: 20 }}>
-            <RiskGauge score={riskScore} level={riskLevel} />
-          </div>
-        )}
-
-        {hasImage && (
-          <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div>
-              <p className="section-title">Predicted stage</p>
-              <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--navy)' }}>
-                {result.image.stage_label}
-              </p>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray)' }}>
-                Stage {result.image.predicted_stage} · {result.image.confidence}% confidence
-              </p>
-            </div>
-            {hasClinical && (
-              <div>
-                <p className="section-title">Clinical risk</p>
-                <p style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--navy)' }}>
-                  {result.clinical.risk_prediction}
-                </p>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray)' }}>
-                  {result.clinical.risk_score}% risk score
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div style={{ marginTop: 22 }}>
-          <button
-            type="button"
-            className="btn btn-download"
-            style={{ width: '100%' }}
-            onClick={handleDownload}
-            disabled={isDownloading}
-          >
-            {isDownloading ? (
-              <>
-                <span className="spinner" aria-hidden="true" />
-                Preparing report…
-              </>
-            ) : (
-              'Download PDF report'
-            )}
-          </button>
-          {downloadError && (
-            <p className="field-error" style={{ marginTop: 8 }}>
-              {downloadError}
-            </p>
-          )}
-        </div>
       </div>
 
-      {hasImage && result.image.gradcam_image_base64 && (
-        <div className="card">
-          <p className="section-title">Retinal image analysis — Grad-CAM</p>
-          <GradCamViewer
-            originalBase64={result.image.original_image_base64}
-            overlayBase64={result.image.gradcam_image_base64}
-            stageLabel={result.image.stage_label}
-            confidence={result.image.confidence}
-          />
-        </div>
-      )}
+      {/* ── Detail panels ── */}
+      <div className="results-detail">
+        {hasImage && result.image.gradcam_image_base64 && (
+          <div className="card">
+            <p className="section-title">Retinal image analysis &mdash; Grad-CAM</p>
+            <GradCamViewer
+              originalBase64={result.image.original_image_base64}
+              overlayBase64={result.image.gradcam_image_base64}
+              stageLabel={result.image.stage_label}
+              confidence={result.image.confidence}
+            />
+          </div>
+        )}
 
-      {hasClinical && (
-        <div className="card">
-          <p className="section-title">Clinical risk explanation — SHAP</p>
-          <ShapChart
-            shapValues={result.clinical.shap_values}
-            featureNames={result.clinical.feature_names}
-          />
-        </div>
-      )}
+        {hasClinical && (
+          <div className="card">
+            <p className="section-title">Clinical risk explanation &mdash; SHAP</p>
+            <ShapChart
+              shapValues={result.clinical.shap_values}
+              featureNames={result.clinical.feature_names}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
