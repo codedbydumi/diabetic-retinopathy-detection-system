@@ -505,3 +505,209 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   STAGE 2 ADDITIONS — animations, About panel, results grid
+   ══════════════════════════════════════════════════════════ */
+
+/* ── entrance animation on load ───────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.app-header {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.disclaimer-banner {
+  animation: fadeInUp 0.5s ease-out 0.06s backwards;
+}
+
+.app-main > * {
+  animation: fadeInUp 0.45s ease-out 0.12s backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-header,
+  .disclaimer-banner,
+  .app-main > *,
+  .view-transition {
+    animation: none !important;
+  }
+}
+
+/* ── form / results view transition ───────────────────────── */
+.view-transition {
+  animation: fadeInUp 0.35s ease-out;
+}
+
+/* ── header brand + about link ────────────────────────────── */
+.app-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-brand-mark {
+  color: var(--navy);
+}
+
+.app-header-link {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: var(--teal-light);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.app-header-link:hover {
+  border-color: var(--teal);
+  color: var(--white);
+}
+
+/* ── about panel ───────────────────────────────────────────── */
+.about-panel {
+  background: var(--white);
+  border: 1px solid var(--gray-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.about-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.about-panel-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--gray);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.about-panel-close:hover {
+  color: var(--ink);
+}
+
+.about-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+
+.about-text-muted {
+  color: var(--gray);
+  font-size: 12.5px;
+  margin-bottom: 0;
+}
+
+.about-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.about-mode {
+  background: var(--bg-light);
+  border: 1px solid var(--gray-light);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.about-mode-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.about-mode-desc {
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+/* ── results two-column instrument-panel layout ───────────── */
+.results-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.results-summary {
+  position: sticky;
+  top: 16px;
+}
+
+.results-summary-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.results-detail .card + .card {
+  margin-top: 16px;
+}
+
+.results-readout-block {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-light);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.results-readout-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.results-readout-value {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.results-readout-detail {
+  font-size: 12.5px;
+  color: var(--gray);
+}
+
+@media (max-width: 880px) {
+  .results-layout {
+    grid-template-columns: 1fr;
+  }
+  .results-summary {
+    position: static;
+  }
+  .about-modes {
+    grid-template-columns: 1fr;
+  }
+}
