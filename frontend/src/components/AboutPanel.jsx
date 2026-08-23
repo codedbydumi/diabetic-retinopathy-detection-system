@@ -67,7 +67,13 @@ function AboutPanel({ onClose }) {
         replace, clinical judgement.
       </p>
 
-      <ClinicianScanIllustration />
+      <ClinicianScanIllustration variant="about" />
+
+      <div className="about-panel-footer">
+        <button type="button" className="btn btn-secondary" onClick={onClose}>
+          Back to screening
+        </button>
+      </div>
     </div>
   );
 }
