@@ -4,6 +4,7 @@ import ResultsPanel from './components/ResultsPanel';
 import DisclaimerBanner from './components/DisclaimerBanner';
 import AboutPanel from './components/AboutPanel';
 import BrandMark from './components/BrandMark';
+import WelcomeGate from './components/WelcomeGate';
 import { predictClinical, predictImage, predictFusion } from './api';
 import './App.css';
 
@@ -13,12 +14,36 @@ const MODES = {
   FUSION: 'fusion',
 };
 
+const SESSION_KEY = 'dr_system_entered';
+
 function App() {
+  const [hasEntered, setHasEntered] = useState(() => {
+    try {
+      return sessionStorage.getItem(SESSION_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [mode, setMode] = useState(MODES.FUSION);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+
+  function handleEnter() {
+    try {
+      sessionStorage.setItem(SESSION_KEY, 'true');
+    } catch {
+      // sessionStorage unavailable — proceed without persisting; the
+      // welcome gate will simply reappear on the next page load.
+    }
+    setHasEntered(true);
+  }
+
+  if (!hasEntered) {
+    return <WelcomeGate onEnter={handleEnter} />;
+  }
 
   async function handleSubmit({ clinicalData, imageFile }) {
     setError(null);
