@@ -1,0 +1,13 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    # Uncomment below if you'd rather mount models from the host instead
+    # of baking them into the image (keeps the image smaller, but then
+    # the models/ folder must exist on whichever machine runs this):
+    # volumes:
+    #   - ./models:/app/models

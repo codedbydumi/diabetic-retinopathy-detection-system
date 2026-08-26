@@ -1,0 +1,29 @@
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+backend/venv/
+backend/.venv/
+
+# Runtime-generated (recreated fresh inside the container)
+backend/generated_reports/
+backend/generated_images/
+
+# Frontend (not needed for the backend image)
+frontend/node_modules/
+frontend/dist/
+
+# Notebooks and large research artefacts (not needed at runtime)
+notebooks/
+data/
+results/
+
+# Version control / docs
+.git/
+.gitignore
+*.md
+README.md
+
+# OS / editor
+.DS_Store
+.vscode/
