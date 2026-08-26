@@ -3,7 +3,7 @@ import ClinicianScanIllustration from './ClinicianScanIllustration';
 const MODES = [
   {
     label: 'Mode 1 — Clinical only',
-    desc: '13 clinical parameters in, a risk score and SHAP explanation out',
+    desc: '14 clinical parameters in, a risk score and SHAP explanation out',
   },
   {
     label: 'Mode 2 — Image only',
@@ -82,7 +82,7 @@ function AboutPanel({ onClose }) {
           <span className="about-model-detail">XGBoost, trained on verified clinical datasets</span>
           <div className="about-model-stats">
             <div className="about-stat">
-              <span className="about-stat-value readout">87.1%</span>
+              <span className="about-stat-value readout">86.8%</span>
               <span className="about-stat-label">Accuracy</span>
             </div>
             <div className="about-stat">
