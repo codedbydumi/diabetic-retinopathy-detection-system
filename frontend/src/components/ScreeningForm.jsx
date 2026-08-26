@@ -5,7 +5,7 @@ const MODES = [
   {
     id: 'clinical',
     title: 'Mode 1 — Clinical only',
-    sub: '13 clinical parameters, no image required',
+    sub: '14 clinical parameters, no image required',
   },
   {
     id: 'image',
