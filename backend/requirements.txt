@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+xgboost
+scikit-learn
+joblib
+shap
+opencv-python-headless
+reportlab
+pandas
+numpy
+pillow
+tensorflow
+matplotlib
