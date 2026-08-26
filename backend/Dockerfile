@@ -1,12 +1,11 @@
-# Backend Dockerfile — build this from the PROJECT ROOT (not from
-# inside backend/), since models/ lives as a sibling folder to
-# backend/ in the repo and Docker cannot COPY from outside its build
-# context. See the build command in DEPLOY_NOTES.md.
-
 FROM python:3.11-slim
 
-# System libraries required by opencv-python-headless at runtime
+# System libraries required by opencv-python-headless AND by
+# TensorFlow/XGBoost's compiled OpenMP-based native code (libgomp1).
+# Missing libgomp1 causes a native crash at import time — surfaces as
+# a segfault backtrace through libffi/_ctypes, not a normal Python error.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -15,23 +14,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python dependencies first — this layer only rebuilds when
-# requirements.txt changes, not on every code edit, keeping rebuilds fast.
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the backend application code
 COPY backend/ .
-
-# Copy trained model artefacts (sibling folder in the repo)
 COPY models/ /app/models/
 
-# Tells main.py exactly where to find the models inside the container —
-# matches the MODELS_DIR fallback logic added to main.py, so no code
-# changes are needed between local development and this container.
 ENV MODELS_DIR=/app/models
 
-# Runtime-generated directories (PDF reports, Grad-CAM images)
 RUN mkdir -p /app/generated_reports /app/generated_images
 
 EXPOSE 8000
