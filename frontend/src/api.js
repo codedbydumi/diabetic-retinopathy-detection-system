@@ -142,7 +142,7 @@ export async function checkHealth() {
 // Used for client-side hints and pre-submit validation so users get
 // instant feedback instead of waiting on a round trip for a 422.
 export const CLINICAL_BOUNDS = {
-  age: { min: 1, max: 120, unit: 'years', required: true },
+  age: { min: 21, max: 120, unit: 'years', required: true },
   glucose: { min: 40, max: 600, unit: 'mg/dL', required: true },
   bmi: { min: 10, max: 70, unit: 'kg/m²', required: true },
   diastolic_bp: { min: 30, max: 160, unit: 'mmHg', required: true },

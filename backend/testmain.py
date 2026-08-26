@@ -30,11 +30,6 @@ from reportlab.graphics.shapes import Drawing, String, Circle, Line, Wedge
 from datetime import datetime
 import math
 import random
-import os
-MODELS_DIR = os.environ.get(
-    'MODELS_DIR',
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models')
-)
 
 # ══════════════════════════════════════════════════════════════════
 # FOCAL LOSS — required to deserialise the image model
@@ -54,9 +49,12 @@ def categorical_focal_loss(gamma=2.0, alpha=0.25):
 print("Loading models...")
 
 clinical_model = xgb.XGBClassifier()
-clinical_model.load_model(os.path.join(MODELS_DIR, 'clinical_model_xgboost_FINAL.json'))
-clinical_threshold = joblib.load(os.path.join(MODELS_DIR, 'clinical_threshold_FINAL.pkl'))
-image_model = load_model(os.path.join(MODELS_DIR, 'mobilenetv2_final_v4_tta.keras'),
+clinical_model.load_model('../models/clinical_model_xgboost_FINAL.json')
+
+clinical_threshold = joblib.load('../models/clinical_threshold_FINAL.pkl')
+
+image_model = load_model(
+    '../models/mobilenetv2_final_v4_tta.keras',
     custom_objects={'focal_loss': categorical_focal_loss(gamma=2.0, alpha=0.25)}
 )
 
@@ -133,7 +131,7 @@ app.add_middleware(
 # separate finding from the glucose unit correction).
 # ══════════════════════════════════════════════════════════════════
 class ClinicalInput(BaseModel):
-    age: float = Field(..., ge=21, le=120, description="Age in years")
+    age: float = Field(..., ge=1, le=120, description="Age in years")
     glucose: float = Field(..., ge=40, le=600, description="Blood glucose in mg/dL")
     bmi: float = Field(..., ge=10, le=70, description="Body Mass Index in kg/m²")
     diastolic_bp: float = Field(..., ge=30, le=160, description="Diastolic blood pressure in mmHg")
@@ -664,7 +662,7 @@ async def predict_image_endpoint(file: UploadFile = File(...)):
 @app.post("/predict/fusion")
 async def predict_fusion_endpoint(
     file: UploadFile = File(...),
-    age: float = Form(..., ge=21, le=120),
+    age: float = Form(..., ge=1, le=120),
     glucose: float = Form(..., ge=40, le=600),
     bmi: float = Form(..., ge=10, le=70),
     diastolic_bp: float = Form(..., ge=30, le=160),
