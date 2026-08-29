@@ -1,131 +1,200 @@
 # AI-Powered Diabetic Retinopathy Detection System
 
-A multi-modal deep learning system for early detection of diabetic retinopathy, combining clinical data analysis and retinal image processing with explainable AI, built for accessible screening at primary care level.
+A multi-modal clinical decision support system that screens for diabetic retinopathy using **clinical data, retinal images, or both** — and explains every prediction it makes.
 
-**Author:** Dumindu Thushan
-**Student ID:** CL/BSCDS/CMU/09/79
-**Programme:** BSc (Hons) Data Science — Final Year Project
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 
----
+**Live system:** [dr-ai.duminduthushan.com](https://dr-ai.duminduthushan.com) · **API docs:** [dr-detection.duminduthushan.com/docs](https://dr-detection.duminduthushan.com/docs)
 
-## Overview
-
-This system screens patients for diabetic retinopathy (DR) using three operational modes, designed to remain useful even in clinics without specialist equipment:
-
-- **Mode 1 — Clinical only:** 13 clinical parameters → risk score + SHAP explanation
-- **Mode 2 — Image only:** retinal fundus image → DR severity stage (0–4) + Grad-CAM heatmap
-- **Mode 3 — Full fusion:** both inputs combined → highest-accuracy prediction + full explainability
-
-Every mode produces an automated two-page PDF clinical report suitable for patient records or specialist referral.
+> ⚠️ **This is a clinical decision-support tool, not a diagnostic device.** All predictions must be reviewed and confirmed by a qualified clinician before any clinical decision is made. It has not undergone prospective clinical validation and is not approved for real patient care.
 
 ---
 
-## Key Results
+## Why this exists
+
+Diabetic retinopathy is the leading cause of preventable blindness in working-age adults, affecting roughly one in three people with diabetes. It progresses silently — by the time a patient notices vision changes, damage is often permanent.
+
+Screening works, but it requires an ophthalmologist and a fundus camera. At primary care level in many countries, neither is available. In Sri Lanka, fewer than 18% of registered diabetic patients had a retinal examination within a two-year period.
+
+Existing AI screening tools (Gulshan et al., 2016; IDx-DR) are **image-only**, produce **no explanation**, and generate **no clinical documentation**. This project addresses all three gaps in a single deployed system.
+
+---
+
+## What it does
+
+| | Mode 1 | Mode 2 | Mode 3 |
+|---|---|---|---|
+| **Input** | 14 clinical parameters | Retinal fundus image | Both |
+| **Output** | Risk probability | DR severity stage (0–4) | Fused risk score |
+| **Explanation** | SHAP waterfall | Grad-CAM heatmap | Both |
+| **Hardware needed** | Browser only | Fundus camera | Fundus camera |
+
+**Mode 1 is the access case** — a clinician with no imaging hardware can still screen a patient using data already in their record.
+
+Every mode generates a downloadable, structured **PDF clinical report** suitable for a patient file or referral letter.
+
+---
+
+## Results
 
 | Model | Metric | Result |
 |---|---|---|
-| Clinical model (XGBoost) | Accuracy | 86.8% |
-| Clinical model (XGBoost) | AUC-ROC | 0.896 |
-| Image model (MobileNetV2 + focal loss + TTA) | Accuracy | 78.0% |
-| Image model (MobileNetV2 + focal loss + TTA) | AUC-ROC | 0.920 |
-| Image model (MobileNetV2 + focal loss + TTA) | Quadratic Weighted Kappa | 0.863 |
+| Clinical (XGBoost) | Accuracy | 86.8% |
+| Clinical (XGBoost) | AUC-ROC | 0.896 |
+| Image (MobileNetV2) | Accuracy | 78.0% |
+| Image (MobileNetV2) | AUC-ROC | 0.920 |
+| Image (MobileNetV2) | Quadratic Weighted Kappa | 0.863 |
 
-Full methodology, iteration history, and honest discussion of trade-offs are documented in `reports/`.
+**On the clinical accuracy figure:** an earlier version scored 87.1%, but a demographic bias audit revealed that glucose was recorded in mg/dL in one source dataset and mmol/L in the other. After correcting the unit mismatch, accuracy settled at 86.8%. The lower number is reported because it reflects correct data.
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Clinical model | XGBoost, scikit-learn |
-| Image model | TensorFlow, MobileNetV2, transfer learning |
-| Explainability | SHAP (clinical), Grad-CAM (image) |
-| Report generation | ReportLab |
-| Backend | FastAPI *(in progress)* |
-| Frontend | React 18 *(in progress)* |
-| Deployment | Docker *(planned)* |
+**On image accuracy:** raw accuracy is a weak metric for imbalanced five-class ordinal grading, where the majority class alone is 49.3% of samples. QWK (0.863) better reflects the model's ability to order severity correctly, which is what matters clinically.
 
 ---
 
-## Datasets
-
-| Dataset | Purpose | Records | Source |
-|---|---|---|---|
-| DiaBD (Bangladesh) | Clinical — South Asian population | 5,288 | Mendeley Data (CC BY) |
-| PIMA Indian Diabetes | Clinical — bias audit reference | 768 | UCI / NIH |
-| APTOS 2019 | Retinal fundus images, 5-stage DR labels | 3,662 images | Kaggle / Aravind Eye Hospital |
-
-All datasets are free, open access, and cited in full in the project report.
-
----
-
-## Project Structure
+## Architecture
 
 ```
-diabetic-retinopathy-detection-system/
-├── data/                       Raw and processed datasets (gitignored)
-├── notebooks/                  Colab experimentation notebooks
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_clinical_model.ipynb
-│   ├── 03_image_model.ipynb
-│   ├── 04_fusion_ablation.ipynb
-│   └── 05_pdf_report_generator.ipynb
-├── models/                     Trained model artefacts
-│   ├── clinical_model_xgboost_FINAL.pkl
-│   ├── clinical_threshold_FINAL.pkl
-│   ├── mobilenetv2_final_v4_tta.keras
-│   ├── clinical_model_final_results.json
-│   └── fusion_ablation_results.json
-├── backend/
-│   └── ml/                     Reusable prediction functions
-│       ├── clinical_model_fn.py
-│       ├── image_model_fn.py
-│       ├── fusion_fn.py
-│       └── report_generator_fn.py
-├── frontend/                   React application (in progress)
-├── reports/
-│   ├── figures/                SHAP charts, Grad-CAM examples
-│   └── Project_Proposal.docx
-├── requirements.txt
-└── README.md
+┌─────────────────────────────────────────────────┐
+│  Presentation    React + Vite  →  Vercel        │
+├─────────────────────────────────────────────────┤
+│  Application     FastAPI (Docker) → Contabo VPS │
+├─────────────────────────────────────────────────┤
+│  Models          XGBoost  |  MobileNetV2        │
+├─────────────────────────────────────────────────┤
+│  Fusion & XAI    Late fusion | SHAP | Grad-CAM  │
+├─────────────────────────────────────────────────┤
+│  Persistence     Model artefacts | Report cache │
+└─────────────────────────────────────────────────┘
+```
+
+Backend runs behind an Apache reverse proxy with a Let's Encrypt TLS certificate. CORS is restricted to the deployed frontend origin.
+
+---
+
+## Data
+
+| Dataset | Records | Use |
+|---|---|---|
+| [PIMA Indian Diabetes](https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database) | 768 | Clinical model |
+| [DiaBD (Bangladesh)](https://doi.org/10.1016/j.dib.2025.111746) | 5,288 | Clinical model |
+| [APTOS 2019 Blindness Detection](https://www.kaggle.com/c/aptos2019-blindness-detection) | 3,662 images | Image model |
+
+Clinical datasets merged to **6,056 records** with 14 substantive features plus 9 missing-value indicator flags. Images preprocessed with automatic cropping, resizing to 224×224, and CLAHE contrast enhancement.
+
+> Datasets are **not redistributed** in this repository. Download them from the sources above.
+
+---
+
+## Repository structure
+
+```
+├── backend/          FastAPI application + Dockerfile
+├── frontend/         React (Vite) single-page application
+├── models/           Trained model artefacts
+├── notebooks/        8 sequential development notebooks
+└── docker-compose.yml
+```
+
+### Notebooks
+
+| # | Notebook | Covers |
+|---|---|---|
+| 01 | `data_collection` | Dataset acquisition |
+| 02 | `clinical_data_prep` | Merge, impute, unit correction |
+| 03 | `clinical_model` | XGBoost tuning, threshold sweep |
+| 04 | `image_data_prep` | Cropping, CLAHE, augmentation |
+| 05 | `image_model_training` | MobileNetV2 transfer learning |
+| 06 | `gradcam_focal_tta` | Grad-CAM, focal loss, test-time augmentation |
+| 07 | `fusion_ablation` | Late vs. intermediate fusion study |
+| 08 | `pdf_report_generator` | Automated clinical report |
+
+---
+
+## Running locally
+
+**Prerequisites:** Docker and Docker Compose, Node.js 18+
+
+```bash
+git clone https://github.com/codedbydumi/diabetic-retinopathy-detection-system.git
+cd diabetic-retinopathy-detection-system
+```
+
+**Backend**
+
+```bash
+docker compose up -d --build
+# API available at http://localhost:8000
+# Interactive docs at http://localhost:8000/docs
+```
+
+**Frontend**
+
+```bash
+cd frontend
+npm install
+echo "VITE_API_URL=http://localhost:8000" > .env
+npm run dev
 ```
 
 ---
 
-## Methodology Highlights
+## API
 
-- **Multi-source clinical data integration** — merged DiaBD and PIMA datasets after identifying and correcting a glucose unit mismatch (mg/dL vs mmol/L) discovered during bias auditing.
-- **Class imbalance handling** — compared class weighting, SMOTE, and ensembling for the clinical model; compared class weighting, focal loss, and test-time augmentation for the image model. Selected the best-performing technique with evidence at each step.
-- **Fusion ablation study** — evaluated both late fusion (weighted ensemble) and intermediate fusion (feature-level concatenation) under rank-matched and random pairing conditions, given the absence of genuinely paired multi-modal patient data in public datasets.
-- **Demographic bias audit** — evaluated clinical model performance stratified by gender, age group, and source dataset (PIMA vs DiaBD), with root-cause investigation into an identified performance gap.
-- **Dual explainability** — SHAP waterfall charts for per-patient clinical risk explanation; Grad-CAM heatmaps for retinal image lesion localisation, qualitatively validated against visible pathology.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/predict/clinical` | Mode 1 — clinical parameters only |
+| `POST` | `/predict/image` | Mode 2 — retinal image only |
+| `POST` | `/predict/fusion` | Mode 3 — both inputs |
+| `GET` | `/report/{report_id}` | Download the generated PDF |
+| `GET` | `/health` | Model load status |
 
----
-
-## Project Status
-
-- [x] Data collection, verification, and preprocessing
-- [x] Clinical model (XGBoost, tuned, threshold-optimised)
-- [x] Image model (MobileNetV2, two-phase transfer learning)
-- [x] SHAP explainability
-- [x] Grad-CAM explainability
-- [x] Multi-modal fusion ablation study (late + intermediate)
-- [x] Demographic bias audit
-- [x] Automated PDF clinical report generator (all 3 modes)
-- [ ] FastAPI backend
-- [ ] React frontend
-- [ ] Docker deployment
-- [ ] Final report — Chapters 3–6
+Full interactive documentation at [`/docs`](https://dr-detection.duminduthushan.com/docs).
 
 ---
 
-## Disclaimer
+## Known limitations
 
-This system is a clinical decision-support tool developed for academic and research purposes. It is **not** a diagnostic device. All AI-generated outputs must be reviewed and confirmed by a qualified clinician before any clinical decision is made.
+- **No prospective clinical validation.** All metrics are retrospective, on held-out test partitions.
+- **Residual demographic disparity.** A 24.9 percentage-point accuracy gap remains between the two clinical source datasets after the glucose unit correction — narrowed from 29.4pp, but not eliminated.
+- **No genuinely paired multi-modal data exists publicly.** Intermediate fusion was evaluated on a synthetically rank-matched set of 550 samples and underperformed both single-modality models; late fusion is deployed instead.
+- **The PIMA subset is female-only, aged 21+.** Input validation is bounded to age 21–120 to avoid extrapolating beyond the training distribution.
+- **Stateless by design.** Reports are cached in memory and do not survive a backend restart.
 
 ---
 
-## References
+## Future work
 
-Full reference list available in the project report (`reports/`), including citations for all datasets, model architectures (MobileNetV2, XGBoost), and explainability methods (SHAP, Grad-CAM) used in this project.
+- Prospective validation with real patients and practising clinicians
+- Acquiring or constructing a genuinely paired clinical + imaging dataset
+- Further investigation of the residual source-dataset performance gap
+- Database persistence for longitudinal patient tracking
+- EHR integration and in-app fundus camera capture
+
+---
+
+## Built with
+
+**ML** — XGBoost · scikit-learn · TensorFlow/Keras · SHAP · OpenCV
+**Backend** — Python 3.11 · FastAPI · ReportLab · Docker
+**Frontend** — React · Vite
+**Infrastructure** — Contabo VPS · Apache · Let's Encrypt · Vercel
+
+---
+
+## Academic context
+
+Developed as the final year Development Project (CSE6035) for BSc (Hons) Data Science, Cardiff Metropolitan University via ICBT Campus.
+
+**Author:** Dumindu Thushan
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
+
+The license covers **this repository's source code only**. The PIMA, DiaBD, and APTOS 2019 datasets are governed by their own respective licences and terms of use — consult each source before using them. Trained model artefacts derived from those datasets inherit any restrictions their source data carries.
